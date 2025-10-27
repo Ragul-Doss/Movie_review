@@ -2,7 +2,11 @@
 
 import tensorflow as tf
 from tensorflow.keras.preprocessing.sequence import pad_sequences
-from tokenizer import tokenizer , max_lenght , trunc_type
+from tensorflow.keras.layers import Embedding, Input
+from tensorflow.keras.models import Model
+
+from tokenizer import tokenizer , max_lenght , trunc_type, vocab_size, embedding_dimension
+
 import streamlit as st
 import numpy as np
 
@@ -11,7 +15,16 @@ st.write("This ML model will guess if a given review is positive or negative by 
          "The model was trained using Tensorflow on an IMDB dataset of real movie reviews.")
 
 with st.spinner("Loading Model....."):
-    new_model = tf.keras.models.load_model('model/sentiment-analysis-model.h5')
+    # Load your base model (missing embedding)
+    base_model = tf.keras.models.load_model('model/sentiment-analysis-model.h5')
+
+    # Recreate embedding wrapper
+    input_ids = Input(shape=(max_lenght,))
+    x = Embedding(input_dim=vocab_size, output_dim=embedding_dimension, input_length=max_lenght)(input_ids)
+    output = base_model(x)
+
+    # Final model that accepts token ids
+    new_model = Model(input_ids, output)
 
 pred_review_text = st.text_input("Enter your review")
 
