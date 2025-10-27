@@ -8,7 +8,7 @@ import numpy as np
 
 st.title("Movie Review Sentiment Analysis")
 st.write("This ML model will guess if a given review is positive or negative by using NLP. "
-         "The model was trained using Tensorflow on an IMDB dataset of real movie reviews.")
+         "This model was trained using Tensorflow and was trained on the imdb-dataset of movie reviews.")
 
 with st.spinner("Loading Model....."):
     new_model = tf.keras.models.load_model('model/sentiment-analysis-model.h5')
@@ -16,14 +16,18 @@ with st.spinner("Loading Model....."):
 pred_review_text = st.text_input("Enter your review")
 
 if pred_review_text.strip() != '':
-    with st.spinner("Processing Review..."):
+    with st.spinner("Tokenizing Text....."):
+        # Tokenize and pad text
         pred_seq = tokenizer.texts_to_sequences([pred_review_text])
         pred_padded = pad_sequences(pred_seq, maxlen=max_lenght, truncating=trunc_type)
 
-        # DIRECTLY PREDICT (NO EMBEDDING WRAPPER)
+        # ✅ IMPORTANT FIX: add extra dimension to match your model input
+        pred_padded = np.expand_dims(pred_padded, axis=1)
+
+        # Predict sentiment
         val = new_model.predict(pred_padded)[0][0]
 
-    st.subheader("Prediction")
+    st.subheader("The given review was : ")
     if val > 0.5:
         st.success(f"✅ Positive Review ({val:.2f})")
     else:
