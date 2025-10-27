@@ -2,9 +2,12 @@
 
 import tensorflow as tf
 from tensorflow.keras.preprocessing.sequence import pad_sequences
-from tokenizer import tokenizer , max_lenght , trunc_type
+from tokenizer import tokenizer, max_lenght, trunc_type
 import streamlit as st
 import numpy as np
+
+# ✅ Fix legacy loading issue
+tf.keras.config.disable_legacy_model_loading()
 
 st.title("Movie Review Sentiment Analysis")
 st.write("This ML model will guess if a given review is positive or negative by using NLP. "
@@ -21,10 +24,10 @@ if pred_review_text.strip() != '':
         pred_seq = tokenizer.texts_to_sequences([pred_review_text])
         pred_padded = pad_sequences(pred_seq, maxlen=max_lenght, truncating=trunc_type)
 
-        # ✅ IMPORTANT FIX: add extra dimension to match your model input
-        pred_padded = np.expand_dims(pred_padded, axis=1)
+        # ❌ REMOVE expand_dims (this was giving wrong ndim)
+        # pred_padded = np.expand_dims(pred_padded, axis=1)
 
-        # Predict sentiment
+        # ✅ Directly predict (shape will be (1, max_len))
         val = new_model.predict(pred_padded)[0][0]
 
     st.subheader("The given review was : ")
