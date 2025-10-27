@@ -30,26 +30,50 @@ def predict_sentiment(text):
     return label, float(pred)
 
 # --------------------- Streamlit UI -----------------------
-st.title("🎬 Movie Review Sentiment Analysis")
-st.write("Analyze whether a movie review is **Positive** or **Negative** using AI.")
+st.markdown(
+    """
+    <h1 style='text-align:center;'>🎬 Movie Review Sentiment</h1>
+    <p style='text-align:center; color:gray;'>
+        AI-powered sentiment classifier for movie reviews
+    </p><br>
+    """,
+    unsafe_allow_html=True
+)
 
-user_input = st.text_area("📝 Enter movie review here:", height=150)
+# ---- Card Container ----
+with st.container():
+    st.markdown(
+        """
+        <div style="
+            background-color: #f9f9f9;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+        ">
+        """,
+        unsafe_allow_html=True
+    )
 
-if st.button("Predict Sentiment"):
-    if user_input.strip() == "":
-        st.warning("⚠️ Please enter a review text first.")
-    else:
-        label, score = predict_sentiment(user_input)
+    user_input = st.text_area("📝 Enter your movie review:", height=140)
 
-        # Sentiment Emoji
-        emoji = "😃" if label == "positive" else "😞"
+    predict_btn = st.button("🔍 Predict Sentiment", use_container_width=True)
 
-        st.markdown("---")
-        st.subheader(f"Result: {emoji} **{label.upper()}**")
+    if predict_btn:
+        if user_input.strip() == "":
+            st.warning("⚠️ Please enter a review text first.")
+        else:
+            label, score = predict_sentiment(user_input)
+            emoji = "😃" if label == "positive" else "😞"
 
-        # Probability Bar
-        st.write("### Confidence:")
-        st.progress(score if label == "positive" else 1 - score)
-        st.write(f"**Confidence Score:** {score:.4f}")
+            st.markdown("---")
+            st.markdown(f"<h3 style='text-align:center;'>Result: {emoji} <b>{label.upper()}</b></h3>", unsafe_allow_html=True)
 
-        st.markdown("---")
+            # Show Confidence
+            st.write("### Confidence:")
+            conf = score if label == "positive" else (1 - score)
+            st.progress(conf)
+            st.write(f"**Confidence Score:** {score:.4f}")
+
+            st.markdown("---")
+
+    st.markdown("</div>", unsafe_allow_html=True)
