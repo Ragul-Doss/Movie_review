@@ -1,49 +1,41 @@
 import streamlit as st
 import tensorflow as tf
-from tensorflow.keras.preprocessing.sequence import pad_sequences
 import numpy as np
 import json
-
-# ---- Load tokenizer ----
-with open("model/tokenizer.json", "r", encoding="utf-8") as f:
-    tokenizer_data = json.load(f)
-
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.preprocessing.text import tokenizer_from_json
-tokenizer = tokenizer_from_json(tokenizer_data)
 
-# ---- (optional) load label map ----
+# --------------------- Load Tokenizer ---------------------
+with open("model/tokenizer.json", "r", encoding="utf-8") as f:
+    tokenizer_json = f.read()
+tokenizer = tokenizer_from_json(tokenizer_json)
+
+# --------------------- Load Label Map ---------------------
 with open("model/label_encoder.json", "r", encoding="utf-8") as f:
     label_map = json.load(f)
 
-# Model constants (must match training)
-MAX_LEN = 120
-TRUNC_TYPE = "post"
+# --------------------- Load Model -------------------------
+model = tf.keras.models.load_model("model/sentiment_model.keras")
 
+# --------------------- Prediction Function ----------------
+MAX_LEN = 120  # must match training
+
+def predict_sentiment(text):
+    sequences = tokenizer.texts_to_sequences([text])
+    padded = pad_sequences(sequences, maxlen=MAX_LEN, truncating="post")
+    prediction = model.predict(padded, verbose=0)[0][0]
+    label = "positive" if prediction >= 0.5 else "negative"
+    return label, float(prediction)
+
+# --------------------- Streamlit UI -----------------------
 st.title("🎬 Movie Review Sentiment Analysis")
-st.write("This app predicts if a movie review is **Positive or Negative** using a trained LSTM model.")
+st.write("Enter a movie review and the model will predict whether it's **positive** or **negative**.")
 
-# ---- Load model (.keras format) ----
-@st.cache_resource
-def load_sentiment_model():
-    return tf.keras.models.load_model("model/sentiment_model.keras")
-
-model = load_sentiment_model()
-
-# ---- UI Input ----
-user_input = st.text_area("✍️ Enter your movie review here:", "")
+user_input = st.text_area("Enter your review here:")
 
 if st.button("Predict Sentiment"):
-    if user_input.strip() == "":
-        st.warning("Please enter some text!")
+    if len(user_input.strip()) == 0:
+        st.warning("Please enter some text before predicting.")
     else:
-        # preprocess input exactly like training
-        seq = tokenizer.texts_to_sequences([user_input])
-        padded = pad_sequences(seq, maxlen=MAX_LEN, truncating=TRUNC_TYPE)
-
-        # model prediction
-        pred = model.predict(padded)[0][0]  # float probability
-        
-        if pred > 0.5:
-            st.success(f"✅ Positive review ({pred:.2f} confidence)")
-        else:
-            st.error(f"❌ Negative review ({1 - pred:.2f} confidence)")
+        label, score = predict_sentiment(user_input)
+        st.success(f"Prediction: **{label.upper()}** ({score:.4f})")
