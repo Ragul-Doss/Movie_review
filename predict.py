@@ -9,16 +9,16 @@ import numpy as np
 st.title("Movie Review Sentiment Analysis")
 st.write("This ML model will guess if a given review is positive or negative by using NLP. "
          "This model was trained using Tensorflow and was trained on the imdb-dataset of movie reviews.")
-
+# ✅ SHOW MODEL LAYERS ON STREAMLIT
+with st.expander("📌 Model Architecture (Debug Info)"):
+    new_model.summary(print_fn=lambda x: st.text(x))
 with st.spinner("Loading Model....."):
     new_model = tf.keras.models.load_model(
         'model/sentiment-analysis-model.h5',
         safe_mode=False   # allow legacy load
     )
 
-# ✅ SHOW MODEL LAYERS ON STREAMLIT
-with st.expander("📌 Model Architecture (Debug Info)"):
-    new_model.summary(print_fn=lambda x: st.text(x))
+
 
 pred_review_text = st.text_input("Enter your review")
 
@@ -37,3 +37,4 @@ if pred_review_text.strip() != '':
         st.success(f"✅ Positive Review ({val:.2f})")
     else:
         st.error(f"❌ Negative Review ({val:.2f})")
+
